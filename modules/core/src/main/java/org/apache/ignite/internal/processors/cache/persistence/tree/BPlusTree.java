@@ -907,7 +907,7 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
             long pageAddr = readLock(firstPageId, firstPage); // We always merge pages backwards, the first page is never removed.
 
             try {
-                cursor.init(pageAddr, io(pageAddr), 0);
+                cursor.init(pageAddr, io(pageAddr), -1);
             }
             finally {
                 readUnlock(firstPageId, firstPage, pageAddr);
@@ -4513,7 +4513,7 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
         /**
          * @param pageAddr Page address.
          * @param io IO.
-         * @param startIdx Start index.
+         * @param startIdx Start index or -1 if need find lower bound.
          * @param cnt Number of rows in the buffer.
          * @return {@code true} If we were able to fetch rows from this page.
          * @throws IgniteCheckedException If failed.
@@ -4523,15 +4523,19 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
             throws IgniteCheckedException {
             assert io.isLeaf() : io;
             assert cnt != 0 : cnt; // We can not see empty pages (empty tree handled in init).
-            assert startIdx >= 0 : startIdx;
+            assert startIdx >= 0 || startIdx == -1 : startIdx;
             assert cnt >= startIdx;
 
             checkDestroyed();
 
             nextPageId = io.getForward(pageAddr);
 
-            if (lowerBound != null && startIdx == 0)
-                startIdx = findLowerBound(pageAddr, io, cnt);
+            if (startIdx == -1) {
+                if (lowerBound != null)
+                    startIdx = findLowerBound(pageAddr, io, cnt);
+                else
+                    startIdx = 0;
+            }
 
             if (upperBound != null && cnt != startIdx)
                 cnt = findUpperBound(pageAddr, io, startIdx, cnt);
@@ -4638,7 +4642,7 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
                     try {
                         BPlusIO<L> io = io(pageAddr);
 
-                        if (fillFromBuffer(pageAddr, io, 0, io.getCount(pageAddr)))
+                        if (fillFromBuffer(pageAddr, io, -1, io.getCount(pageAddr)))
                             return true;
 
                         // Continue fetching forward.
