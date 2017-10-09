@@ -4449,14 +4449,8 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
 
                 rows = null;
             }
-            else if (!fillFromBuffer(pageAddr, io, startIdx, cnt)) {
-                if (rows != EMPTY) {
-                    assert rows.length > 0; // Otherwise it makes no sense to create an array.
-
-                    // Fake clear.
-                    rows[0] = null;
-                }
-            }
+            else if (!fillFromBuffer(pageAddr, io, startIdx, cnt))
+                rows = null;
         }
 
         /**
