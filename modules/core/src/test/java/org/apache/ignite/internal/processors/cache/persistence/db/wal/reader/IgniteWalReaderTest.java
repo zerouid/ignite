@@ -45,10 +45,9 @@ import org.apache.ignite.cache.CacheAtomicityMode;
 import org.apache.ignite.cache.CacheRebalanceMode;
 import org.apache.ignite.cache.affinity.rendezvous.RendezvousAffinityFunction;
 import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.DataStorageConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.configuration.MemoryConfiguration;
-import org.apache.ignite.configuration.MemoryPolicyConfiguration;
-import org.apache.ignite.configuration.PersistentStoreConfiguration;
+import org.apache.ignite.configuration.DataRegionConfiguration;
 import org.apache.ignite.configuration.WALMode;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
@@ -75,6 +74,7 @@ import org.apache.ignite.testframework.junits.common.GridCommonAbstractTest;
 import org.apache.ignite.transactions.Transaction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
 
 import static org.apache.ignite.events.EventType.EVT_WAL_SEGMENT_ARCHIVED;
 import static org.apache.ignite.internal.processors.cache.GridCacheOperation.DELETE;
@@ -130,31 +130,20 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
 
         cfg.setIncludeEventTypes(EventType.EVT_WAL_SEGMENT_ARCHIVED);
 
-        final MemoryConfiguration dbCfg = new MemoryConfiguration();
-
-        dbCfg.setPageSize(PAGE_SIZE);
-
-        final MemoryPolicyConfiguration memPlcCfg = new MemoryPolicyConfiguration();
-
-        memPlcCfg.setName("dfltMemPlc");
-        memPlcCfg.setInitialSize(1024 * 1024 * 1024);
-        memPlcCfg.setMaxSize(1024 * 1024 * 1024);
-
-        dbCfg.setMemoryPolicies(memPlcCfg);
-        dbCfg.setDefaultMemoryPolicyName("dfltMemPlc");
-
-        cfg.setMemoryConfiguration(dbCfg);
-
-        final PersistentStoreConfiguration pCfg = new PersistentStoreConfiguration();
-        pCfg.setWalHistorySize(1);
-        pCfg.setWalSegmentSize(1024 * 1024);
-        pCfg.setWalSegments(WAL_SEGMENTS);
-        pCfg.setWalMode(customWalMode != null ? customWalMode : WALMode.BACKGROUND);
+        DataStorageConfiguration memCfg = new DataStorageConfiguration()
+            .setDefaultDataRegionConfiguration(
+                new DataRegionConfiguration().setMaxSize(1024 * 1024 * 1024).setPersistenceEnabled(true))
+            .setPageSize(PAGE_SIZE)
+            .setWalHistorySize(1)
+            .setWalSegmentSize(1024 * 1024)
+            .setWalSegments(WAL_SEGMENTS)
+            .setWalMode(customWalMode != null ? customWalMode : WALMode.BACKGROUND);
 
         if (archiveIncompleteSegmentAfterInactivityMs > 0)
-            pCfg.setWalAutoArchiveAfterInactivity(archiveIncompleteSegmentAfterInactivityMs);
+            memCfg.setWalAutoArchiveAfterInactivity(archiveIncompleteSegmentAfterInactivityMs);
 
-        cfg.setPersistentStoreConfiguration(pCfg);
+        cfg.setDataStorageConfiguration(memCfg);
+
         return cfg;
     }
 
@@ -340,6 +329,23 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
     }
 
     /**
+     * Puts provided number of records to fill WAL
+     *
+     * @param ignite ignite instance
+     * @param recordsToWrite count
+     */
+    private void putAllDummyRecords(Ignite ignite, int recordsToWrite) {
+        IgniteCache<Object, Object> cache0 = ignite.cache(CACHE_NAME);
+
+        Map<Object, Object> values = new HashMap<>();
+
+        for (int i = 0; i < recordsToWrite; i++)
+            values.put(i, new IndexedObject(i));
+
+        cache0.putAll(values);
+    }
+
+    /**
      * Puts provided number of records to fill WAL under transactions
      *
      * @param ignite ignite instance
@@ -492,8 +498,8 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
      * @param factory WAL iterator factory.
      * @param workDir Ignite work directory.
      * @param subfolderName DB subfolder name based on consistent ID.
-     * @param expCntEntries minimum expected entries count to find.
-     * @param expTxCnt minimum expected transaction count to find.
+     * @param minCntEntries minimum expected entries count to find.
+     * @param minTxCnt minimum expected transaction count to find.
      * @param objConsumer object handler, called for each object found in logical data records.
      * @param dataRecordHnd data handler record
      * @throws IgniteCheckedException if failed.
@@ -502,8 +508,8 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
         final IgniteWalIteratorFactory factory,
         final String workDir,
         final String subfolderName,
-        final int expCntEntries,
-        final int expTxCnt,
+        final int minCntEntries,
+        final int minTxCnt,
         @Nullable final BiConsumer<Object, Object> objConsumer,
         @Nullable final Consumer<DataRecord> dataRecordHnd) throws IgniteCheckedException {
 
@@ -538,8 +544,8 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
         final int entriesWork = valuesSum(cntWork.values());
         log.info("Archive directory: Tx found " + txCntObservedWork + " entries " + entriesWork);
 
-        assert entriesArch + entriesWork >= expCntEntries;
-        assert txCntObservedWork + txCntObservedArch >= expTxCnt;
+        assert entriesArch + entriesWork >= minCntEntries;
+        assert txCntObservedWork + txCntObservedArch >= minTxCnt;
     }
 
     /**
@@ -715,6 +721,78 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
     }
 
     /**
+     * Tests archive completed event is fired
+     *
+     * @throws Exception if failed
+     */
+    public void testFillWalForExactSegmentsCount() throws Exception {
+        customWalMode = WALMode.DEFAULT;
+
+        final CountDownLatch reqSegments = new CountDownLatch(15);
+        final Ignite ignite = startGrid("node0");
+
+        ignite.active(true);
+
+        final IgniteEvents evts = ignite.events();
+
+        if (!evts.isEnabled(EVT_WAL_SEGMENT_ARCHIVED))
+            assertTrue("nothing to test", false);
+
+        evts.localListen(new IgnitePredicate<Event>() {
+            @Override public boolean apply(Event e) {
+                WalSegmentArchivedEvent archComplEvt = (WalSegmentArchivedEvent)e;
+                long idx = archComplEvt.getAbsWalSegmentIdx();
+                log.info("Finished archive for segment [" + idx + ", " +
+                    archComplEvt.getArchiveFile() + "]: [" + e + "]");
+
+                reqSegments.countDown();
+                return true;
+            }
+        }, EVT_WAL_SEGMENT_ARCHIVED);
+
+
+        int totalEntries = 0;
+        while (reqSegments.getCount() > 0) {
+            final int write = 500;
+            putAllDummyRecords(ignite, write);
+            totalEntries += write;
+            Assert.assertTrue("Too much entries generated, but segments was not become available",
+                totalEntries < 10000);
+        }
+        final String subfolderName = genDbSubfolderName(ignite, 0);
+
+        stopGrid("node0");
+
+        final String workDir = U.defaultWorkDirectory();
+        final IgniteWalIteratorFactory factory = createWalIteratorFactory(subfolderName, workDir);
+
+        scanIterateAndCount(factory, workDir, subfolderName, totalEntries, 0, null, null);
+    }
+
+    /**
+     * Tests reading of empty WAL from non filled cluster
+     *
+     * @throws Exception if failed.
+     */
+    public void testReadEmptyWal() throws Exception {
+        customWalMode = WALMode.DEFAULT;
+
+        final Ignite ignite = startGrid("node0");
+
+        ignite.active(true);
+        ignite.active(false);
+
+        final String subfolderName = genDbSubfolderName(ignite, 0);
+
+        stopGrid("node0");
+
+        final String workDir = U.defaultWorkDirectory();
+        final IgniteWalIteratorFactory factory = createWalIteratorFactory(subfolderName, workDir);
+
+        scanIterateAndCount(factory, workDir, subfolderName, 0, 0, null, null);
+    }
+
+    /**
      * Creates and fills cache with data.
      *
      * @param ig Ignite instance.
@@ -823,8 +901,16 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
             deletesFound != null && deletesFound > 0);
     }
 
-    @NotNull private IgniteWalIteratorFactory createWalIteratorFactory(String subfolderName,
-        String workDir) throws IgniteCheckedException {
+    /**
+     * @param subfolderName Subfolder name.
+     * @param workDir Work directory.
+     * @return WAL iterator factory.
+     * @throws IgniteCheckedException If failed.
+     */
+    @NotNull private IgniteWalIteratorFactory createWalIteratorFactory(
+        String subfolderName,
+        String workDir
+    ) throws IgniteCheckedException {
         final File binaryMeta = U.resolveWorkDirectory(workDir, "binary_meta", false);
         final File binaryMetaWithConsId = new File(binaryMeta, subfolderName);
         final File marshallerMapping = U.resolveWorkDirectory(workDir, "marshaller", false);
@@ -834,7 +920,6 @@ public class IgniteWalReaderTest extends GridCommonAbstractTest {
             binaryMetaWithConsId,
             marshallerMapping);
     }
-
 
     /**
      * @param values collection with numbers

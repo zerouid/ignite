@@ -41,8 +41,8 @@ import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
 import org.apache.ignite.cache.store.CacheStoreAdapter;
 import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.DataStorageConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.configuration.MemoryConfiguration;
 import org.apache.ignite.configuration.NearCacheConfiguration;
 import org.apache.ignite.internal.IgniteEx;
 import org.apache.ignite.internal.processors.cache.DynamicCacheDescriptor;
@@ -86,7 +86,7 @@ public class IgniteSqlNotNullConstraintTest extends GridCommonAbstractTest {
     private static String CACHE_INTERCEPTOR = "cacheInterceptor";
 
     /** Expected error message. */
-    private static String ERR_MSG = "Null value is not allowed for field 'NAME'";
+    private static String ERR_MSG = "Null value is not allowed for column 'NAME'";
 
     /** Expected error message for read-through restriction. */
     private static String READ_THROUGH_ERR_MSG = "NOT NULL constraint is not supported when " +
@@ -141,7 +141,7 @@ public class IgniteSqlNotNullConstraintTest extends GridCommonAbstractTest {
             c.setClientMode(true);
 
             // Not allowed to have local cache on client without memory config
-            c.setMemoryConfiguration(new MemoryConfiguration());
+            c.setDataStorageConfiguration(new DataStorageConfiguration());
         }
 
         return c;
