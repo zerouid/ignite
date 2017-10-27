@@ -133,11 +133,6 @@ public interface IgniteCacheOffheapManager {
     public void destroyCacheDataStore(CacheDataStore store) throws IgniteCheckedException;
 
     /**
-     * TODO: GG-10884, used on only from initialValue.
-     */
-    public boolean containsKey(GridCacheMapEntry entry);
-
-    /**
      * @param cctx Cache context.
      * @param c Closure.
      * @throws IgniteCheckedException If failed.

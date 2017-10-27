@@ -1820,7 +1820,8 @@ public final class GridDhtTxPrepareFuture extends GridCacheCompoundFuture<Ignite
                         GridDrType drType = cacheCtx.isDrEnabled() ? GridDrType.DR_PRELOAD : GridDrType.DR_NONE;
 
                         try {
-                            if (entry.initialValue(info.value(),
+                            if (entry.initialValue(
+                                info.value(),
                                 info.version(),
                                 info.ttl(),
                                 info.expireTime(),
@@ -1828,10 +1829,22 @@ public final class GridDhtTxPrepareFuture extends GridCacheCompoundFuture<Ignite
                                 topVer,
                                 drType,
                                 false)) {
-                                if (rec && !entry.isInternal())
-                                    cacheCtx.events().addEvent(entry.partition(), entry.key(), cctx.localNodeId(),
-                                        (IgniteUuid)null, null, EVT_CACHE_REBALANCE_OBJECT_LOADED, info.value(), true, null,
-                                        false, null, null, null, false);
+                                if (rec && !entry.isInternal()) {
+                                    cacheCtx.events().addEvent(entry.partition(),
+                                        entry.key(),
+                                        cctx.localNodeId(),
+                                        (IgniteUuid)null,
+                                        null,
+                                        EVT_CACHE_REBALANCE_OBJECT_LOADED,
+                                        info.value(),
+                                        true,
+                                        null,
+                                        false,
+                                        null,
+                                        null,
+                                        null,
+                                        false);
+                                }
 
                                 if (retVal && !invoke)
                                     ret.value(cacheCtx, info.value(), false);

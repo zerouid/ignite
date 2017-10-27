@@ -1256,17 +1256,31 @@ public final class GridDhtLockFuture extends GridCacheCompoundIdentityFuture<Boo
                         cctx.shared().database().checkpointReadLock();
 
                         try {
-                            if (entry.initialValue(info.value(),
+                            if (entry.initialValue(
+                                info.value(),
                                 info.version(),
                                 info.ttl(),
                                 info.expireTime(),
-                                true, topVer,
+                                true,
+                                topVer,
                                 replicate ? DR_PRELOAD : DR_NONE,
                                 false)) {
-                                if (rec && !entry.isInternal())
-                                    cctx.events().addEvent(entry.partition(), entry.key(), cctx.localNodeId(),
-                                        (IgniteUuid)null, null, EVT_CACHE_REBALANCE_OBJECT_LOADED, info.value(), true, null,
-                                        false, null, null, null, false);
+                                if (rec && !entry.isInternal()) {
+                                    cctx.events().addEvent(entry.partition(),
+                                        entry.key(),
+                                        cctx.localNodeId(),
+                                        (IgniteUuid)null,
+                                        null,
+                                        EVT_CACHE_REBALANCE_OBJECT_LOADED,
+                                        info.value(),
+                                        true,
+                                        null,
+                                        false,
+                                        null,
+                                        null,
+                                        null,
+                                        false);
+                                }
                             }
                         }
                         finally {

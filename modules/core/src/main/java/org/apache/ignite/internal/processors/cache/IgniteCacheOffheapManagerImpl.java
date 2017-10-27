@@ -403,18 +403,6 @@ public class IgniteCacheOffheapManagerImpl implements IgniteCacheOffheapManager 
     }
 
     /** {@inheritDoc} */
-    @Override public boolean containsKey(GridCacheMapEntry entry) {
-        try {
-            return read(entry) != null;
-        }
-        catch (IgniteCheckedException e) {
-            U.error(log, "Failed to read value", e);
-
-            return false;
-        }
-    }
-
-    /** {@inheritDoc} */
     @Override public void onPartitionCounterUpdated(int part, long cntr) {
         // No-op.
     }

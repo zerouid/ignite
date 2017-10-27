@@ -2080,16 +2080,16 @@ public class DataStreamerImpl<K, V> implements IgniteDataStreamer<K, V>, Delayed
                             expiryTime = CU.toExpireTime(ttl);
                         }
 
-                    boolean primary = cctx.affinity().primaryByKey(cctx.localNode(), entry.key(), topVer);
+                        boolean primary = cctx.affinity().primaryByKey(cctx.localNode(), entry.key(), topVer);
 
-                    entry.initialValue(e.getValue(),
-                        ver,
-                        ttl,
-                        expiryTime,
-                        false,
-                        topVer,
-                        primary ? GridDrType.DR_LOAD : GridDrType.DR_PRELOAD,
-                        false);
+                        entry.initialValue(e.getValue(),
+                            ver,
+                            ttl,
+                            expiryTime,
+                            false,
+                            topVer,
+                            primary ? GridDrType.DR_LOAD : GridDrType.DR_PRELOAD,
+                            false);
 
                         cctx.evicts().touch(entry, topVer);
 
