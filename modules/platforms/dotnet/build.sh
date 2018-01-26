@@ -27,3 +27,7 @@ popd
 
 cd Apache.Ignite.Core.Tests.DotNetCore
 dotnet build
+
+# dotnet pack Apache.Ignite.Core/Apache.Ignite.Core.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
+# dotnet pack Apache.Ignite.Linq/Apache.Ignite.Linq.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
+

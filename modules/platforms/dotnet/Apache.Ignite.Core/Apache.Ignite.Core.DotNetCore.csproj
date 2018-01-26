@@ -6,10 +6,42 @@
 	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<AssemblyName>Apache.Ignite.Core</AssemblyName>
 	<RootNamespace>Apache.Ignite.Core</RootNamespace>
-  </PropertyGroup>  
+  </PropertyGroup> 
+
+  <PropertyGroup>
+        <PackageId>Apache.Ignite</PackageId>
+        <Title>Apache Ignite</Title>
+        <Authors>Apache Ignite</Authors>
+        <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+        <PackageProjectUrl>https://ignite.apache.org/</PackageProjectUrl>
+        <PackageIconUrl>https://ignite.apache.org/images/logo_ignite_32_32.png</PackageIconUrl>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <Description>
+Apache Ignite In-Memory Data Fabric is a high-performance, integrated and distributed in-memory platform for computing and transacting on large-scale data sets in real-time, orders of magnitude faster than possible with traditional disk-based or flash technologies.
+Supports .NET 4+ and .NET Core 2.0+.
+            
+More info: https://apacheignite-net.readme.io/
+        </Description>
+        <PackageReleaseNotes></PackageReleaseNotes>
+        <Copyright>Copyright 2018</Copyright>
+        <PackageTags>Apache Ignite In-Memory Distributed Computing SQL NoSQL Grid Map Reduce Cache linqpad-samples</PackageTags>
+        <NoPackageAnalysis>true</NoPackageAnalysis>
+ </PropertyGroup> 
   
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.0" />
   </ItemGroup>
-  
+  <ItemGroup>
+    <JavaLibs Include="..\..\..\indexing\target\ignite-indexing*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\indexing\target\libs\*.jar" />
+    <JavaLibs Include="..\..\..\core\target\ignite-core*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\core\target\libs\*.jar" />
+    <JavaLibs Include="..\..\..\spring\target\ignite-spring*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\spring\target\libs\*.jar" />
+    <None Include="@(JavaLibs)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </None>
+  </ItemGroup>
 </Project>

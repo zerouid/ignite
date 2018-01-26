@@ -7,9 +7,33 @@
 	<RootNamespace>Apache.Ignite.Linq</RootNamespace>
     <NoWarn>NU1701</NoWarn>
   </PropertyGroup>  
+
+  <PropertyGroup>
+        <PackageId>Apache.Ignite.Linq</PackageId>
+        <Title>Apache Ignite LINQ Provider</Title>
+        <Authors>Apache Ignite</Authors>
+        <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+        <PackageProjectUrl>https://ignite.apache.org/</PackageProjectUrl>
+        <PackageIconUrl>https://ignite.apache.org/images/logo_ignite_32_32.png</PackageIconUrl>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <Description>
+LINQ Provider for Apache Ignite
+
+Query distributed in-memory data in a strongly-typed manner and with IDE support!
+All Ignite SQL features are supported: distributed joins, groupings, aggregates, field queries, and more.
+
+Supports .NET 4+ and .NET Core 2.0+.
+            
+More info: https://apacheignite-net.readme.io/
+        </Description>
+        <PackageReleaseNotes></PackageReleaseNotes>
+        <Copyright>Copyright 2018</Copyright>
+        <PackageTags>Apache Ignite In-Memory Distributed Computing SQL NoSQL LINQ Grid Map Reduce Cache linqpad-samples</PackageTags>
+        <NoPackageAnalysis>true</NoPackageAnalysis>
+</PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Remotion.Linq" Version="2.0.1" />
+    <PackageReference Include="Remotion.Linq" Version="2.1.2" />
     <ProjectReference Include="..\Apache.Ignite.Core\Apache.Ignite.Core.DotNetCore.csproj" />
   </ItemGroup>
   
