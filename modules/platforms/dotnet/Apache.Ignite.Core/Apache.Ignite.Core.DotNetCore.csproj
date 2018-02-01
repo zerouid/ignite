@@ -6,6 +6,7 @@
 	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<AssemblyName>Apache.Ignite.Core</AssemblyName>
 	<RootNamespace>Apache.Ignite.Core</RootNamespace>
+  <CopyBuildOutputToPublishDirectory>true</CopyBuildOutputToPublishDirectory>
   </PropertyGroup> 
 
   <PropertyGroup>
@@ -32,16 +33,18 @@ More info: https://apacheignite-net.readme.io/
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup>
-    <JavaLibs Include="..\..\..\indexing\target\ignite-indexing*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\indexing\target\ignite-indexing*.jar" Exclude="..\..\..\indexing\target\*-sources*;..\..\..\indexing\target\*-javadoc*;..\..\..\indexing\target\*-tests*;..\..\..\indexing\target\*optional*" />
     <JavaLibs Include="..\..\..\indexing\target\libs\*.jar" />
-    <JavaLibs Include="..\..\..\core\target\ignite-core*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\core\target\ignite-core*.jar" Exclude="..\..\..\core\target\*-sources*;..\..\..\core\target\*-javadoc*;..\..\..\core\target\*-tests*;..\..\..\core\target\*optional*" />
     <JavaLibs Include="..\..\..\core\target\libs\*.jar" />
-    <JavaLibs Include="..\..\..\spring\target\ignite-spring*.jar" Exclude="..\..\..\indexing\target\*-sources*;*-javadoc*;*-tests*;*optional*" />
+    <JavaLibs Include="..\..\..\spring\target\ignite-spring*.jar" Exclude="..\..\..\spring\target\*-sources*;..\..\..\spring\target\*-javadoc*;..\..\..\spring\target\*-tests*;..\..\..\spring\target\*optional*" />
     <JavaLibs Include="..\..\..\spring\target\libs\*.jar" />
     <None Include="@(JavaLibs)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libs\%(Filename)%(Extension)</Link>
       <Pack>true</Pack>
       <PackageCopyToOutput>true</PackageCopyToOutput>
+      <PackagePath>libs</PackagePath>
     </None>
   </ItemGroup>
 </Project>

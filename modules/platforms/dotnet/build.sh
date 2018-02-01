@@ -25,9 +25,9 @@ cd ../../..
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true -Plgpl,-examples,-clean-libs,-release,-scala,-clientDocs
 popd
 
-cd Apache.Ignite.Core.Tests.DotNetCore
-dotnet build
+# cd Apache.Ignite.Core.Tests.DotNetCore
+# dotnet build
 
-# dotnet pack Apache.Ignite.Core/Apache.Ignite.Core.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
-# dotnet pack Apache.Ignite.Linq/Apache.Ignite.Linq.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
+dotnet pack Apache.Ignite.Core/Apache.Ignite.Core.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
+dotnet pack Apache.Ignite.Linq/Apache.Ignite.Linq.DotNetCore.csproj --configuration Release --output ../nuget /p:PackageVersion=2.5.0-dotnetcore
 
